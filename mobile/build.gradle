@@ -9,7 +9,6 @@ android {
     defaultConfig {
         minSdkVersion this.minSdkVersion
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-        missingDimensionStrategy 'compat', 'platformDeprecated'  // setup-wizard-lib has this dimension
     }
 
     buildFeatures {
@@ -37,8 +36,9 @@ android {
 }
 
 dependencies {
-//    implementation fileTree(dir: 'libs', include: ['*.aar'])
-    implementation project(':setup-wizard-lib')
+    debugImplementation project(path: ':setup-wizard-lib', configuration: 'gingerbreadCompatDebugRuntimeElements')
+    releaseImplementation project(path: ':setup-wizard-lib', configuration: 'gingerbreadCompatReleaseRuntimeElements')
+
     implementation project(':shared')
     implementation project(':deagle')
 

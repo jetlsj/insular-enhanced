@@ -12,7 +12,7 @@ include:
     https://android.googlesource.com/platform/frameworks/opt/setupwizard
     ../setup-wizard
   - pushd ../setup-wizard
-  - sed -i -e "s/Compile/Implementation/g" library/rules.gradle
+  - sed -i -e "s/Compile/Implementation/g" -e "s/flavorDimensions 'compat'/flavorDimensions 'compat'\ndefaultConfig { vectorDrawables.useSupportLibrary = true }/" library/rules.gradle
   - popd
 
 .only-release: &only-release
