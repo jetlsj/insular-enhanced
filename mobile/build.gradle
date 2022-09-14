@@ -46,6 +46,9 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:$kotlin_coroutine_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutine_version"
     implementation 'androidx.core:core-ktx:1.10.1'
+    implementation('androidx.core:core-google-shortcuts:1.1.0') {
+        exclude group:'com.google.android.gms'
+    }
     implementation "androidx.fragment:fragment-ktx:1.6.0"
     implementation 'androidx.lifecycle:lifecycle-common-java8:2.6.1'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0'
