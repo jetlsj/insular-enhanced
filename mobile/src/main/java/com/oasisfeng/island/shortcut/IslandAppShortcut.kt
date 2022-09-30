@@ -76,8 +76,13 @@ object IslandAppShortcut {
 
 		val shortcut = buildShortcutInfo(context, app, dynamic)
 
-		try { ShortcutManagerCompat.pushDynamicShortcut(context, shortcut) }
-		catch (e: RuntimeException) { Log.e(TAG, "Error adding dynamic shortcut", e) }
+		if (dynamic) {
+			try {
+				ShortcutManagerCompat.pushDynamicShortcut(context, shortcut)
+			} catch (e: RuntimeException) {
+				Log.e(TAG, "Error adding dynamic shortcut", e)
+			}
+		}
 
 		try { ShortcutManagerCompat.requestPinShortcut(context, shortcut, null) }       // FIXME: Deal with rate limit and ROM restricted shortcut permission (no exception)
 		catch (e: RuntimeException) { showToastForShortcutFailure(context); analytics().report(e) }
