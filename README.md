@@ -2,7 +2,7 @@
 
 Isolate your big brother app.
 
-This is a fork based on the excellent [Island](https://github.com/oasisfeng/island). Extra credit to [Shelter](https://github.com/PeterCxy/Shelter) which inspire me to make the completely FLOSS fork of Island.
+This is a fork based on the excellent [Island](https://github.com/oasisfeng/island). Extra credit to [Shelter](https://github.com/PeterCxy/Shelter) which inspired me to make the completely FLOSS fork of Island.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.svg"
     alt="Get it on F-Droid"
