@@ -37,8 +37,10 @@ stages:
   - production
 
 .build_job:
-  image: cimg/android:2022.03
+  image: cimg/android:2023.12
   stage: build
+  tags:
+    - saas-linux-large-amd64
   before_script:
     # Fix artifacts permissions
     - sudo chown `whoami`:`groups` $VERSION_BUILD_GRADLE_LOCATION
@@ -136,7 +138,7 @@ publishInternal:
   before_script:
     - mv $google_play_service_account_api_key_json ~/.google-play.json
     - apk add build-base
-    - "export VERSION_CODE=$CI_PIPELINE_IID && echo $VERSION_CODE"
+    - 'export VERSION_CODE=$CI_PIPELINE_IID && echo $VERSION_CODE'
     # Install fastlane etc.
     - bundle config set path 'vendor/bundle'
     - bundle install -j $(nproc)
