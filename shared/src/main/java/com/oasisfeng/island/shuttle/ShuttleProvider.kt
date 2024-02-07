@@ -26,7 +26,7 @@ class ShuttleProvider: ContentProvider() {
 
 		fun <R> call(context: Context, profile: UserHandle, function: ContextFun<R>): ShuttleResult<R> {
 			val bundle = Bundle(1).apply { putParcelable(null, Closure(function)) }
-			val uri = buildCrossProfileUri(profile.toId())
+			val uri = buildCrossProfileUri(profile.toId(), context)
 			try { return ShuttleResult(context.contentResolver.call(uri, function.javaClass.name, null, bundle)) }
 			catch (e: RuntimeException) { // "SecurityException" or "IllegalArgumentException: Unknown authority 0@..." if shuttle is not ready
 				if (e is SecurityException || e is IllegalArgumentException) {
@@ -35,9 +35,9 @@ class ShuttleProvider: ContentProvider() {
 				throw e }
 		}
 
-		private fun isReady(c: Context, profile: UserHandle) = c.isPermissionGranted(buildCrossProfileUri(profile.toId()))
+		private fun isReady(c: Context, profile: UserHandle) = c.isPermissionGranted(buildCrossProfileUri(profile.toId(), c))
 		@OwnerUser private fun isBackwardReady(c: Context, profile: UserHandle) =
-			c.isPermissionGranted(Uri.parse(CONTENT_URI), uid = UserHandles.getUid(profile.toId(), Process.myUid()))
+			c.isPermissionGranted(Uri.parse(getContentUri(c)), uid = UserHandles.getUid(profile.toId(), Process.myUid()))
 
 		private fun Context.isPermissionGranted(uri: Uri, uid: Int = Process.myUid()) =
 				checkUriPermission(uri, 0, uid, Intent.FLAG_GRANT_WRITE_URI_PERMISSION) == PERMISSION_GRANTED
@@ -63,13 +63,13 @@ class ShuttleProvider: ContentProvider() {
 		}
 
 		private fun initializeInIsland(context: Context) {
-			if (context.isPermissionGranted(Uri.parse(CONTENT_URI), uid = UserHandles.getAppId(Process.myUid())))
+			if (context.isPermissionGranted(Uri.parse(getContentUri(context)), uid = UserHandles.getAppId(Process.myUid())))
 				return Unit.also { Log.i(TAG, "Shuttle in ${Users.current().toId()}: ready") }
 
 			Log.i(TAG, "Shuttle in profile ${Users.current().toId()}: establishing...")
 			ShuttleCarrierActivity.sendToParentProfileQuietlyIfPossible(context) {
 				addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
-				clipData = ClipData(TAG, emptyArray(), ClipData.Item(buildCrossProfileUri())) }
+				clipData = ClipData(TAG, emptyArray(), ClipData.Item(buildCrossProfileUri(context = context))) }
 		}
 
 		@OwnerUser @ProfileUser fun collectActivityResult(context: Context, intent: Intent) {
@@ -82,10 +82,14 @@ class ShuttleProvider: ContentProvider() {
 			context.contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
 		}
 
-		fun buildCrossProfileUri(profileId: Int = Users.currentId()): Uri = Uri.parse("$SCHEME_CONTENT://$profileId@$AUTHORITY")
+		fun buildCrossProfileUri(profileId: Int = Users.currentId(), context: Context): Uri = Uri.parse("$SCHEME_CONTENT://$profileId@${getAuthority(context)}")
 
-		private const val AUTHORITY = "com.oasisfeng.island.shuttle"
-		const val CONTENT_URI = "$SCHEME_CONTENT://$AUTHORITY"
+		private fun getAuthority(context: Context): String {
+			return context.packageName + ".shuttle"
+		}
+		fun getContentUri(context: Context): String {
+			 return "$SCHEME_CONTENT://${getAuthority(context)}"
+		}
 	}
 
 	override fun call(method: String, arg: String?, extras: Bundle?): Bundle? {
