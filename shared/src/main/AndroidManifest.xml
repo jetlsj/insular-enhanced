@@ -26,7 +26,7 @@
             </intent-filter>
         </activity>
 
-        <provider android:authorities="com.oasisfeng.island.shuttle" android:exported="false"
+        <provider android:authorities="${applicationId}.shuttle" android:exported="false"
                   android:name="com.oasisfeng.island.shuttle.ShuttleProvider" android:grantUriPermissions="true"
                   android:directBootAware="true" />
 
