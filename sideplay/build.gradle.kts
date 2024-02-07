@@ -1,4 +1,4 @@
-plugins { id("com.android.application") }
+plugins { id("com.android.library") }
 
 android {
     namespace = "com.oasisfeng.island.sideplay"
@@ -6,14 +6,13 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 31
+        minSdk = 27
         targetSdk = 31
     }
 
     buildTypes {
         getByName("release") {
             isMinifyEnabled = true
-            isShrinkResources = true
         }
     }
 }

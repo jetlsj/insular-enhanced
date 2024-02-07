@@ -4,17 +4,6 @@ include:
   - project: accessable-net/gitlab-ci-templates
     file: android-set-version-ci.yml
 
-.checkout-deagle: &checkout_deagle
-  - git clone https://github.com/oasisfeng/deagle ../deagle -b dev
-
-.checkout-setupwizard: &checkout_setupwizard
-  - git clone
-    https://android.googlesource.com/platform/frameworks/opt/setupwizard
-    ../setup-wizard
-  - pushd ../setup-wizard
-  - sed -i -e "s/Compile/Implementation/g" -e "s/flavorDimensions 'compat'/flavorDimensions 'compat'\ndefaultConfig { vectorDrawables.useSupportLibrary = true }/" library/rules.gradle
-  - popd
-
 .only-release: &only-release
   only:
     - master
@@ -25,6 +14,10 @@ variables:
   VERSION_BUILD_GRADLE_LOCATION: assembly/build.gradle
   VERSION_ANDROID_MANIFEST_LOCATION: assembly/src/main/AndroidManifest.xml
   VERSION_CHANGELOG_DIR_LOCATION: fastlane/metadata/android/en-US/changelogs
+
+  #  For libraries
+  GIT_SUBMODULE_STRATEGY: recursive
+  GIT_SUBMODULE_DEPTH: 1
 
 stages:
   - environment
@@ -51,8 +44,6 @@ default:
     # Prepare dependencies
     - bundle config set path 'vendor/bundle'
     - bundle install -j $(nproc)
-    - *checkout_deagle
-    - *checkout_setupwizard
   after_script:
     - rm -f android-signing-keystore.jks || true
   artifacts:
@@ -94,8 +85,6 @@ testFdroidDebug:
     # Prepare dependencies
     - bundle config set path 'vendor/bundle'
     - bundle install -j $(nproc)
-    - *checkout_deagle
-    - *checkout_setupwizard
   script:
     - bundle exec fastlane test
   cache:
