@@ -28,6 +28,7 @@ android {
         versionCode 51507
         // Manually bump the semver version part of the string as necessary
         versionName '5.1.2-a3fe6196'
+        multiDexEnabled true
     }
 
     buildFeatures.dataBinding true
@@ -55,7 +56,6 @@ android {
 
     flavorDimensions += "packaging"
     flavorDimensions += "distribution"
-    flavorDimensions += "version"
 
     productFlavors {
         complete { dimension "packaging" }
@@ -66,7 +66,7 @@ android {
         googleplay { dimension "distribution" }
 
         fdroid {
-            dimension "version"
+            dimension "distribution"
             applicationIdSuffix = ".fdroid"
         }
     }
@@ -125,7 +125,7 @@ dependencies {
     completeImplementation project(':installer')
     completeImplementation project(':watcher')
     completeImplementation project(':open')
-    completeImplementation project(':ninja')
+    completeImplementation project(':sideplay')
 
     //debugImplementation project(':media')
 

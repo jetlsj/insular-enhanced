@@ -1,0 +1,6 @@
+[submodule "libs/deagle"]
+	path = libs/deagle
+	url = https://github.com/oasisfeng/deagle
+[submodule "libs/setup-wizard"]
+	path = libs/setup-wizard
+	url = https://gitea.angry.im/PeterCxy/SetupWizardLibrary.git

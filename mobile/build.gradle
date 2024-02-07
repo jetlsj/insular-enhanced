@@ -9,6 +9,7 @@ android {
     defaultConfig {
         minSdkVersion this.minSdkVersion
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        missingDimensionStrategy 'compat', 'gingerbreadCompat', 'platformDeprecated'
     }
 
     buildFeatures {
