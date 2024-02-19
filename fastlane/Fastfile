@@ -21,14 +21,14 @@ platform :android do
     gradle(task: "test")
   end
 
-  desc "Build bundle for debugging"
-  lane :buildFdroidDebugBundle do
-    gradle(task: "bundle", flavor: "completeFdroid", build_type: "Debug")
+  desc "Build Google Play bundle for debugging"
+  lane :buildGooglePlayDebugBundle do
+    gradle(task: "bundle", flavor: "completeGooglePlay", build_type: "Debug")
   end
 
-  desc "Build bundle for release"
-  lane :buildFdroidReleaseBundle do
-    gradle(task: "bundle", flavor: "completeFdroid", build_type: "Release")
+  desc "Build Google Play bundle for release"
+  lane :buildGooglePlayReleaseBundle do
+    gradle(task: "bundle", flavor: "completeGooglePlay", build_type: "Release")
   end
 
   desc "Build apk for debugging"
@@ -43,7 +43,7 @@ platform :android do
 
   desc "Submit a new Internal Build to Play Store"
   lane :internal do
-    upload_to_play_store(track: "internal", aab: "assembly/build/outputs/bundle/completeFdroidRelease/assembly-complete-fdroid-release.aab")
+    upload_to_play_store(track: "internal", aab: "assembly/completeGoogleplay/release/assembly-complete-googleplay-release.aab")
   end
 
   desc "Promote Internal to Alpha"
@@ -69,7 +69,7 @@ platform :android do
 
   desc "Deploy a new version to the Google Play"
   lane :deploy do
-    gradle(task: "clean assembleCompleteRelease")
+    gradle(task: "clean assembleCompleteGooglePlayRelease")
     upload_to_play_store
   end
 
