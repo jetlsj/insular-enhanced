@@ -91,6 +91,8 @@ testFdroidDebug:
     paths:
       - .gradle
       - vendor/bundle
+  tags:
+    - saas-linux-large-amd64
 
 publishInternal:
   <<: *only-release
