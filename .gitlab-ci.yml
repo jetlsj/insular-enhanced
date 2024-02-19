@@ -156,8 +156,6 @@ promoteBeta:
     - bundle exec fastlane promote_alpha_to_beta version_code:$VERSION_CODE
 
 promoteProduction:
-  environment:
-    name: production
   extends: .promote_job
   stage: production
   # We only allow production promotion on `master` because
