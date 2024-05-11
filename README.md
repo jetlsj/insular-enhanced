@@ -19,7 +19,7 @@ On how to enable Insular via `adb`, cross-profile file access, God mode (extendi
 
 With Insular, you can:
 - Isolate your Big Brother apps
-- Clone and run multiple accounts simutaniuosly
+- Clone and run multiple accounts simultaneously
 - Freeze or archive apps and prevent any background behaviors
 - Unfreeze apps on-demand with home screen shortcuts
 - Re-freeze marked apps with one tap
