@@ -1,6 +1,6 @@
 include:
   - project: accessable-net/gitlab-ci-templates
-    file: scheduled_rebase.yml
+    file: scheduled-upstream-code-merge.yml
   - project: accessable-net/gitlab-ci-templates
     file: android-set-version-ci.yml
 
