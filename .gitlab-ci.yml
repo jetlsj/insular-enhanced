@@ -5,9 +5,9 @@ include:
     file: android-set-version-ci.yml
 
 .only-release: &only-release
-  only:
-    - master
-    - tags
+  rules:
+    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_REF_NAME == $CI_DEFAULT_BRANCH
 
 variables:
   UPSTREAM_BRANCH: dev
@@ -34,6 +34,9 @@ default:
 
 .build_job:
   stage: build
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+      when: never
   tags:
     - saas-linux-large-amd64
   before_script:
@@ -110,8 +113,8 @@ publishInternal:
     paths:
       - .gradle
       - vendor/bundle
-  only:
-    - tags
+  rules:
+    - if: $CI_COMMIT_TAG
 
 .promote_job:
   <<: *only-release
@@ -122,7 +125,7 @@ publishInternal:
   before_script:
     - mv $google_play_service_account_api_key_json ~/.google-play.json
     - apk add build-base
-    - "export VERSION_CODE=$CI_PIPELINE_IID && echo $VERSION_CODE"
+    - 'export VERSION_CODE=$CI_PIPELINE_IID && echo $VERSION_CODE'
     # Install fastlane etc.
     - bundle config set path 'vendor/bundle'
     - bundle install -j $(nproc)
@@ -132,8 +135,8 @@ publishInternal:
     paths:
       - .gradle
       - vendor/bundle
-  only:
-    - tags
+  rules:
+    - if: $CI_COMMIT_TAG
 
 promoteAlpha:
   extends: .promote_job
@@ -152,7 +155,8 @@ promoteProduction:
   stage: production
   # We only allow production promotion on `master` because
   # it has its own production scoped secret variables
-  only:
-    - $CI_DEFAULT_BRANCH
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - when: never
   script:
     - bundle exec fastlane promote_beta_to_production version_code:$VERSION_CODE
