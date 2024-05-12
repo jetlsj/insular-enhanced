@@ -71,6 +71,8 @@ public class AppListViewModel extends BaseAppListViewModel<AppViewModel> {
 
 	private static final long QUERY_TEXT_DELAY = 300;	// The delay before typed query text is applied
 	private static final String STATE_KEY_FILTER_HIDDEN_SYSTEM_APPS = "filter.hidden_sys";
+	private static final String STATE_KEY_FILTER_CAN_QUERY_ALL_PACKAGES = "filter.can_query_all_packages";
+	private static final String STATE_KEY_FILTER_CAN_MANAGE_STORAGE = "filter.can_manage_storage";
 
 	/** Workaround for menu res reference not supported by data binding */ public static @MenuRes int actions_menu = R.menu.app_actions;
 
@@ -80,6 +82,12 @@ public class AppListViewModel extends BaseAppListViewModel<AppViewModel> {
 	private void setFilterText(final @Nullable String text) { mState.set(SearchManager.QUERY, text); }
 	public MutableLiveData<Boolean> getFilterIncludeHiddenSystemApps() {
 		return mState.getLiveData(STATE_KEY_FILTER_HIDDEN_SYSTEM_APPS, false);
+	}
+	public MutableLiveData<Boolean> getFilterCanQueryAllPackages() {
+		return mState.getLiveData(STATE_KEY_FILTER_CAN_QUERY_ALL_PACKAGES, false);
+	}
+	public MutableLiveData<Boolean> getFilterCanManageExternalStorage() {
+		return mState.getLiveData(STATE_KEY_FILTER_CAN_MANAGE_STORAGE, false);
 	}
 
 	public interface Filter extends Predicate<IslandAppInfo> {
@@ -147,8 +155,12 @@ public class AppListViewModel extends BaseAppListViewModel<AppViewModel> {
 		Predicate<IslandAppInfo> filters = mFilterShared.and(profile_filter);
 		if (getFilterIncludeHiddenSystemApps().getValue() != Boolean.TRUE)
 			filters = filters.and(app -> ! app.isSystem() || app.isInstalled() && app.isLaunchable());  // Exclude system apps without launcher activity
+		if (getFilterCanQueryAllPackages().getValue() == Boolean.TRUE)
+			filters = filters.and(IslandAppInfo::canQueryAllPackages);
+		if (getFilterCanManageExternalStorage().getValue() == Boolean.TRUE)
+			filters = filters.and(IslandAppInfo::canManageExternalStorage);
 		final String text = getQueryText().getValue();
-		if (text != null && text.length() != 0) {
+		if (text != null && ! text.isEmpty()) {
 			if (text.startsWith("package:")) {
 				final String pkg = text.substring(8);
 				filters = filters.and(app -> app.packageName.equals(pkg));
@@ -221,8 +233,11 @@ public class AppListViewModel extends BaseAppListViewModel<AppViewModel> {
 	}
 
 	private void updateChipsVisibility() {
-		mChipsVisible.setValue(getCurrentProfile() != null
-				&& (getFilterIncludeHiddenSystemApps().getValue() == Boolean.TRUE || ! TextUtils.isEmpty(getQueryText().getValue())));
+		mChipsVisible.setValue(getCurrentProfile() != null && (
+				getFilterIncludeHiddenSystemApps().getValue() == Boolean.TRUE
+				|| getFilterCanQueryAllPackages().getValue() == Boolean.TRUE
+				|| getFilterCanManageExternalStorage().getValue() == Boolean.TRUE
+				|| ! TextUtils.isEmpty(getQueryText().getValue())));
 	}
 
 	public void updateActions(final Menu menu, final boolean cloneTipHidden) {

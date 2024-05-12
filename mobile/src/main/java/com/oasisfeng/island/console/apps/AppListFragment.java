@@ -56,6 +56,8 @@ public class AppListFragment extends Fragment {
 			mViewModel.updateActions(mBinding.toolbar.getMenu(), mUserGuide == null || mUserGuide.isCloneTipHidden());
 		});
 		vm.getFilterIncludeHiddenSystemApps().observe(this, filter -> mViewModel.updateAppList("filter_hidden_changed"));
+		vm.getFilterCanQueryAllPackages().observe(this, filter -> mViewModel.updateAppList("filter_query_all_changed"));
+		vm.getFilterCanManageExternalStorage().observe(this, filter -> mViewModel.updateAppList("filter_manage_storage_changed"));
 		vm.getFilterText().observe(this, text -> mViewModel.updateAppList("search_changed"));
 	}
 
