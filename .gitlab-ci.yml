@@ -30,13 +30,14 @@ stages:
   - production
 
 default:
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/cimg/android:2023.12
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/cimg/android:2024.04
 
 .build_job:
   stage: build
   rules:
     - if: $CI_PIPELINE_SOURCE == "trigger"
       when: never
+    - when: always
   tags:
     - saas-linux-large-amd64
   before_script:
