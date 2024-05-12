@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" /> <!-- IslandWatcher -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application tools:ignore="AllowBackup,GoogleAppIndexingWarning,MissingApplicationIcon">
 
@@ -23,7 +24,7 @@
             </intent-filter>
         </receiver>
         <provider android:name=".IslandAppWatcher$AppStateTracker"
-                  android:authorities="com.oasisfeng.island.watcher"
+                  android:authorities="${applicationId}.watcher"
                   android:exported="false"
                   android:enabled="@bool/since_api_26"
                   android:directBootAware="true" />

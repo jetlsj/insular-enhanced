@@ -9,6 +9,7 @@ android {
     defaultConfig {
         minSdkVersion this.minSdkVersion
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        missingDimensionStrategy 'compat', 'gingerbreadCompat', 'platformDeprecated'
     }
 
     buildFeatures {
@@ -36,7 +37,9 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.aar'])
+    debugImplementation project(path: ':setup-wizard-lib', configuration: 'gingerbreadCompatDebugRuntimeElements')
+    releaseImplementation project(path: ':setup-wizard-lib', configuration: 'gingerbreadCompatReleaseRuntimeElements')
+
     implementation project(':shared')
     implementation project(':deagle')
 
@@ -70,4 +73,5 @@ dependencies {
 
     androidTestImplementation 'org.mockito:mockito-android:2.8.9'
     androidTestImplementation 'androidx.test:runner:1.3.0'
+    androidTestImplementation 'androidx.test:core:1.2.0'
 }

@@ -1,7 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WAKE_LOCK" android:maxSdkVersion="25" />
     <uses-permission android:name="android.permission.INTERACT_ACROSS_PROFILES" />
     <uses-permission android:name="android.permission.GET_APP_OPS_STATS" tools:ignore="ProtectedPermissions" /> <!-- AppOpsCompat -->
@@ -28,25 +27,9 @@
             </intent-filter>
         </activity>
 
-        <provider android:authorities="com.oasisfeng.island.shuttle" android:exported="false"
+        <provider android:authorities="${applicationId}.shuttle" android:exported="false"
                   android:name="com.oasisfeng.island.shuttle.ShuttleProvider" android:grantUriPermissions="true"
                   android:directBootAware="true" />
-
-        <!-- Disable the default heavy-weight initialization of Firebase -->
-        <provider android:name="com.google.firebase.provider.FirebaseInitProvider"
-                  android:authorities="${applicationId}.firebaseinitprovider"
-                  tools:node="remove" tools:ignore="ExportedContentProvider"/>
-
-        <!-- Google Analytics (required for devices without GMS) -->
-        <receiver android:name="com.google.android.gms.analytics.AnalyticsReceiver" android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.android.gms.analytics.ANALYTICS_DISPATCH" />
-            </intent-filter>
-        </receiver>
-        <service android:name="com.google.android.gms.analytics.AnalyticsService" android:exported="false" />
-
-        <!-- Workaround issue of Firebase Analytics - IllegalStateException: Not allowed to start service Intent ... app is in background uid ... -->
-        <receiver android:name="com.google.android.gms.measurement.AppMeasurementReceiver" android:enabled="@bool/until_api_24" tools:replace="android:enabled" />
 
     </application>
 

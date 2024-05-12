@@ -65,7 +65,7 @@ class ShuttleCarrierActivity: Activity() {
 			Log.d(TAG, "Carrier is started in Mainland.")
 			try { ShuttleProvider.collectActivityResult(this, intent) }
 			catch (e: SecurityException) { Log.e(TAG, "Error collecting shuttle.") }
-			setResult(RESULT_OK, Intent(null, ShuttleProvider.buildCrossProfileUri()) // Send reverse shuttle back
+			setResult(RESULT_OK, Intent(null, ShuttleProvider.buildCrossProfileUri(context = this)) // Send reverse shuttle back
 					.setFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION or Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION))
 			finish()
 		} else {
@@ -86,7 +86,7 @@ class ShuttleCarrierActivity: Activity() {
 	override fun onRestart() {
 		super.onRestart()
 		if (SDK_INT >= Build.VERSION_CODES.R) try {       // Cannot receive activity result on R+, see onCreate().
-			ShuttleProvider.takeUriGranted(this, Uri.parse(ShuttleProvider.CONTENT_URI))
+			ShuttleProvider.takeUriGranted(this, Uri.parse(ShuttleProvider.getContentUri(this)))
 		} catch (e: RuntimeException) { Log.e(TAG, "Error taking shuttle from parent profile.", e) }
 	}
 

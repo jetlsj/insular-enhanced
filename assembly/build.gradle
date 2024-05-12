@@ -1,6 +1,18 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.google.firebase.crashlytics'
+
+// Try reading secrets from file
+def secretsPropertiesFile = rootProject.file("secrets.properties")
+def secretProperties = new Properties()
+
+if (secretsPropertiesFile.exists()) {
+    secretProperties.load(new FileInputStream(secretsPropertiesFile))
+}
+// Otherwise read from environment variables, this happens in CI
+else {
+    secretProperties.setProperty("signing_keystore_password", "${System.getenv('KEYSTORE_PASSWORD')}")
+    secretProperties.setProperty("signing_key_password", "${System.getenv('KEY_PASSWORD')}")
+    secretProperties.setProperty("signing_key_alias", "${System.getenv('KEY_ALIAS')}")
+}
 
 android {
     namespace 'com.oasisfeng.island'
@@ -13,17 +25,32 @@ android {
         targetSdkVersion 33
         resourceConfigurations += ['en', 'zh', 'zh-rTW', 'pt-rBR']
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+        versionCode 51507
+        // Manually bump the semver version part of the string as necessary
+        versionName '5.1.2-a3fe6196'
+        multiDexEnabled true
     }
 
     buildFeatures.dataBinding true
 
+    signingConfigs {
+        release {
+            // You need to specify either an absolute path or include the
+            // keystore file in the same directory as the build.gradle file.
+            storeFile file("../android-signing-keystore.jks")
+            storePassword "${secretProperties['signing_keystore_password']}"
+            keyAlias "${secretProperties['signing_key_alias']}"
+            keyPassword "${secretProperties['signing_key_password']}"
+        }
+    }
+
     buildTypes {
         debug {
-            firebaseCrashlytics.mappingFileUploadEnabled false
         }
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
         }
     }
 
@@ -36,7 +63,42 @@ android {
         mobile   { dimension "packaging"; applicationIdSuffix ".mobile" }
 
         normal     { dimension "distribution" }
-        googleplay { dimension "distribution" }
+        googleplay {
+            dimension "distribution"
+            applicationIdSuffix = ".fdroid"
+        }
+
+        fdroid {
+            dimension "distribution"
+            applicationIdSuffix = ".fdroid"
+        }
+    }
+
+    android.applicationVariants.all { variant ->
+        variant.mergeResources.doFirst {
+            variant.sourceSets.each { sourceSet ->
+                sourceSet.res.srcDirs = sourceSet.res.srcDirs.collect { dir ->
+                    def relDir = relativePath(dir)
+                    delete '**/analytics_tracker.xml'
+                    copy {
+                        from(dir)
+                        include '**/*.xml'
+                        filteringCharset = 'UTF-8'
+                        filter {
+                            line -> line
+                                    .replace('Island', 'Insular')
+                        }
+                        into("${buildDir}/tmp/${variant.dirName}/${relDir}")
+                    }
+                    copy {
+                        from(dir)
+                        exclude '**/*.xml'
+                        into("${buildDir}/tmp/${variant.dirName}/${relDir}")
+                    }
+                    return "${buildDir}/tmp/${variant.dirName}/${relDir}"
+                }
+            }
+        }
     }
 
     compileOptions {
@@ -66,7 +128,7 @@ dependencies {
     completeImplementation project(':installer')
     completeImplementation project(':watcher')
     completeImplementation project(':open')
-    completeImplementation project(':ninja')
+    completeImplementation project(':sideplay')
 
     //debugImplementation project(':media')
 
