@@ -42,7 +42,7 @@ default:
     - saas-linux-large-amd64
   before_script:
     # Fix artifacts permissions
-    - sudo chown `whoami`:`groups` $VERSION_BUILD_GRADLE_LOCATION
+    - sudo chown `whoami`:`groups` vendor/bundle
     - base64 -d $KEYSTORE_FILE > android-signing-keystore.jks
     # Prepare dependencies
     - bundle config set path 'vendor/bundle'
