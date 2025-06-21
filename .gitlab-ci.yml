@@ -3,6 +3,7 @@ include:
     file: scheduled-upstream-code-merge.yml
   - project: accessable-net/gitlab-ci-templates
     file: android-set-version-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
 
 .only-release: &only-release
   rules:
@@ -14,6 +15,8 @@ variables:
   VERSION_BUILD_GRADLE_LOCATION: assembly/build.gradle
   VERSION_ANDROID_MANIFEST_LOCATION: assembly/src/main/AndroidManifest.xml
   VERSION_CHANGELOG_DIR_LOCATION: fastlane/metadata/android/en-US/changelogs
+
+  GITLAB_ADVANCED_SAST_ENABLED: 'true'
 
   #  For libraries
   GIT_SUBMODULE_STRATEGY: recursive
