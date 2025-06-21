@@ -17,12 +17,11 @@ import com.oasisfeng.common.app.AppListProvider
 import com.oasisfeng.island.data.helper.installed
 import com.oasisfeng.island.engine.ClonedHiddenSystemApps
 import com.oasisfeng.island.provisioning.SystemAppsManager
+import com.oasisfeng.island.shuttle.Shuttle
 import com.oasisfeng.island.util.Users
 import com.oasisfeng.island.util.Users.Companion.isParentProfile
 import com.oasisfeng.island.util.Users.Companion.toId
 import java.util.function.Predicate
-import java.util.stream.Stream
-import kotlin.streams.asSequence
 
 /**
  * Island-specific [AppListProvider]
@@ -82,9 +81,8 @@ class IslandAppListProvider : AppListProvider<IslandAppInfo>() {
 		}
 	}
 
-	fun installedApps(profile: UserHandle): Stream<IslandAppInfo> {
-		return if (profile.isParentProfile()) installedAppsInOwnerUser() else loadAppsInProfileIfNotYet(profile).values.stream()
-	}
+	fun installedApps(profile: UserHandle): Collection<IslandAppInfo>
+	= if (profile.isParentProfile()) installedAppsInOwnerUser() else loadAppsInProfileIfNotYet(profile).values
 
 	private fun loadAppsInProfileIfNotYet(profile: UserHandle): Map<String, IslandAppInfo>
 	= if (! Users.isProfileManagedByIsland(context(), profile)) emptyMap() else mIslandAppMap.getOrPut(profile) { refresh(profile) }
@@ -95,7 +93,7 @@ class IslandAppListProvider : AppListProvider<IslandAppInfo>() {
 		mLauncherApps.registerCallback(mCallback)
 
 		context().registerReceiver(object : BroadcastReceiver() {
-			override fun onReceive(context: Context, intent: Intent) {
+			override fun onReceive(context: Context, intent: Intent) { @Suppress("DEPRECATION")
 				val profile = intent.getParcelableExtra<UserHandle>(EXTRA_USER) ?: return
 				Log.i(TAG, "Profile removed: ${profile.toId()}")
 				mIslandAppMap[profile]?.clear()
@@ -106,10 +104,17 @@ class IslandAppListProvider : AppListProvider<IslandAppInfo>() {
 	}
 
 	private fun refresh(profile: UserHandle): ArrayMap<String, IslandAppInfo> {
-		val visible = mLauncherApps.getActivityList(null, profile).asSequence().map { it.applicationInfo }.associateBy { it.packageName }  // Collect all unfrozen apps first in one API call.
 		Log.d(TAG, "Refresh apps in Island ${profile.toId()}")
-		return installedAppsInOwnerUser().asSequence().mapNotNull { visible[it.packageName] ?: getAppInfo(it.packageName, profile) }
-			.associateByTo(ArrayMap(), ApplicationInfo::packageName) { IslandAppInfo(this, profile, it, null) }
+		// Starting from Android 15 QPR2 (2025 March update), MATCH_UNINSTALLED_PACKAGES or MATCH_ALL in mainland no longer returns frozen apps in Island.
+		val apps: Sequence<ApplicationInfo> = (if (profile != Users.current()) {
+			Shuttle(context(), to = profile).invokeNoThrows {
+				packageManager.getInstalledApplications(PM_FLAGS_APP_INFO) }?.asSequence()
+		} else null) ?: // Fallback: Mix visible apps from LauncherApps with invisible (frozen) apps from mainland PackageManager.
+			// Collect all visible (unfrozen) apps first in one API call, to reduce later getAppInfo() calls.
+			mLauncherApps.getActivityList(null, profile).asSequence()
+				.map { it.applicationInfo }.associateBy { it.packageName }.let { visible ->
+			installedAppsInOwnerUser().asSequence().mapNotNull { visible[it.packageName] ?: getAppInfo(it.packageName, profile) }}
+		return apps.associateByTo(ArrayMap(), ApplicationInfo::packageName) { IslandAppInfo(this, profile, it, null) }
 	}
 
 	private fun getAppInfo(pkg: String, profile: UserHandle): ApplicationInfo? {

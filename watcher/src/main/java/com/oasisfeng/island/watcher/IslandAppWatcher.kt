@@ -14,6 +14,8 @@ import android.net.Uri
 import android.os.Build.VERSION.SDK_INT
 import android.os.Build.VERSION_CODES.O
 import android.os.Build.VERSION_CODES.Q
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.annotation.ColorRes
 import androidx.annotation.RequiresApi
@@ -92,9 +94,11 @@ import java.util.*
 	/** This provider tracks all freezing and unfreezing events triggered by other modules within the default process of Island  */
 	class AppStateTracker : PseudoContentProvider() {
 
-		override fun onCreate() = false.also { ContextCompat.registerReceiver(context(), IslandAppWatcher(),
-			IntentFilter(DevicePolicies.ACTION_PACKAGE_UNFROZEN).apply { addAction(ACTION_PACKAGE_REMOVED); addDataScheme(("package")) },
-			RECEIVER_NOT_EXPORTED) }
+		override fun onCreate() = false.also { Handler(Looper.getMainLooper()).post {
+			ContextCompat.registerReceiver(context(), IslandAppWatcher(),
+			IntentFilter(DevicePolicies.ACTION_PACKAGE_UNFROZEN).apply {
+				addAction(ACTION_PACKAGE_REMOVED); addDataScheme(("package")) }, RECEIVER_NOT_EXPORTED)
+		}}
 	}
 
 	companion object {
@@ -110,14 +114,15 @@ import java.util.*
 
 		private fun startWatching(context: Context, info: PackageInfo) {
 			val watchingPermissions: ArrayList<String>?
-			if (info.requestedPermissions != null) {
+			val requestedPermissions = info.requestedPermissions
+			if (requestedPermissions != null) {
 				watchingPermissions = ArrayList()
-				for (i in info.requestedPermissions.indices) if (info.requestedPermissionsFlags[i] and PackageInfo.REQUESTED_PERMISSION_GRANTED == 0) {
-					val permission = info.requestedPermissions[i]
+				for (i in requestedPermissions.indices) if (info.requestedPermissionsFlags!![i] and PackageInfo.REQUESTED_PERMISSION_GRANTED == 0) {
+					val permission = requestedPermissions[i]
 					if (CONCERNED_PERMISSIONS.contains(permission)) watchingPermissions.add(permission)
 				}
 			} else watchingPermissions = null
-			val pkg = info.packageName; val appLabel = info.applicationInfo.loadLabel(context.packageManager)
+			val pkg = info.packageName; val appLabel = info.applicationInfo?.loadLabel(context.packageManager) ?: pkg
 			NotificationIds.IslandAppWatcher.post(context, pkg) {
 				buildShared(context, pkg, com.oasisfeng.island.shared.R.color.primary)
 				setContentTitle(context.getString(R.string.notification_app_watcher_title, appLabel)).setContentText(context.getText(R.string.notification_app_watcher_text))
