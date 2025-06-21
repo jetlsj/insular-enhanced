@@ -72,7 +72,7 @@
         </receiver>
 
         <service android:name="com.oasisfeng.island.service.IslandPersistentService"
-                 android:permission="android.permission.BIND_DEVICE_ADMIN" android:exported="true">
+                 android:permission="android.permission.BIND_DEVICE_ADMIN" android:exported="true" tools:targetApi="26">
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_SERVICE" />
             </intent-filter>
@@ -83,6 +83,7 @@
                   android:exported="false" />
 
         <service android:name="com.oasisfeng.island.provisioning.IslandProvisioning" android:exported="false"
+                 android:foregroundServiceType="shortService"
                  android:directBootAware="true">
             <intent-filter>
                 <action android:name="android.app.action.PROVISION_MANAGED_PROFILE" /> <!-- For re-provisioning procedure, see IslandSettingsFragment -->
