@@ -30,7 +30,7 @@ stages:
   - production
 
 default:
-  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/cimg/android:2024.04
+  image: ${CI_DEPENDENCY_PROXY_DIRECT_GROUP_IMAGE_PREFIX}/cimg/android:2025.04
 
 .build_job:
   stage: build
