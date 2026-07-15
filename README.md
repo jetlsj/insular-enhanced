@@ -1,5 +1,7 @@
 # Insular Enhanced（炼妖壶增强版）
 
+[简体中文](README.md) | [English](README_EN.md)
+
 一个面向 Android 工作资料（Work Profile）的应用隔离、克隆与管理工具。本仓库在 Insular 的基础上，重点修复了部分 Android 新版本及 Xiaomi HyperOS 设备上的克隆、安装和跨空间启动问题，并增加了“直接安装外部 APK 到壶中界”功能。
 
 > [!IMPORTANT]
