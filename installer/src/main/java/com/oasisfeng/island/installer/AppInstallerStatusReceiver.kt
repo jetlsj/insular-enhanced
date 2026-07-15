@@ -27,6 +27,8 @@ class AppInstallerStatusReceiver: BroadcastReceiver() {
 		val installer = context.packageManager.packageInstaller
 		val sessionInfo = installer.getSessionInfo(sessionId)
 		val pkg = sessionInfo?.appPackageName ?: intent.getStringExtra(PackageInstaller.EXTRA_PACKAGE_NAME)
+		Log.i(TAG, "[${install.trace}] status=$status, legacy=$legacyStatus, session=$sessionId, package=$pkg, " +
+			"message=${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)}")
 		when (status) {
 			PackageInstaller.STATUS_SUCCESS -> {
 				if (pkg != null) AppInstallationNotifier.onPackageInstalled(context, sessionId, pkg, install)
@@ -36,8 +38,17 @@ class AppInstallerStatusReceiver: BroadcastReceiver() {
 				val action = intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT) ?: return
 				if ((action.component?.packageName ?: action.`package`) == context.packageName) return    // Prevent targeting our private component
 				action.flags = action.flags and FLAG_GRANT_READ_URI_PERMISSION.inv() and FLAG_GRANT_WRITE_URI_PERMISSION.inv()  // Prevent content leak
-				if (AppInstallerUtils.ensureSystemPackageEnabledAndUnfrozen(context, action))
-					context.startActivity(action.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_FORWARD_RESULT))
+				if (! AppInstallerUtils.ensureSystemPackageEnabledAndUnfrozen(context, action)) {
+					val message = context.getString(R.string.dialog_install_unknown_failure_message)
+					Log.e(TAG, "[${install.trace}] Cannot enable or resolve package confirmation activity: $action")
+					return AppInstallationNotifier.onInstallFail(context, sessionId, install, message)
+				}
+				try { context.startActivity(action.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_FORWARD_RESULT)) }
+				catch (e: RuntimeException) {
+					val message = e.message ?: context.getString(R.string.dialog_install_unknown_failure_message)
+					Log.e(TAG, "[${install.trace}] Failed to launch package confirmation activity", e)
+					AppInstallationNotifier.onInstallFail(context, sessionId, install, message)
+				}
 			}
 
 			else -> {

@@ -83,6 +83,13 @@
 
         <activity android:name="com.oasisfeng.island.setup.SetupActivity" android:theme="@style/SetupTheme" />
 
+        <!-- Runs only inside Island so the document URI grant and PackageInstaller session belong to the same Android user. -->
+        <activity android:name="com.oasisfeng.island.controller.ExternalApkInstallActivity"
+                  android:excludeFromRecents="true"
+                  android:exported="false"
+                  android:taskAffinity=""
+                  android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
         <activity android:name="com.oasisfeng.island.action.FeatureActionActivity" android:theme="@android:style/Theme.Translucent.NoTitleBar"
                   android:excludeFromRecents="true" android:exported="true">
             <intent-filter> <!-- Deep-link for App Actions -->

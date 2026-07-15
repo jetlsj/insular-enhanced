@@ -5,12 +5,15 @@ package com.oasisfeng.island.settings
 import android.Manifest.permission.*
 import android.annotation.SuppressLint
 import android.app.ActionBar
+import android.app.Activity
 import android.app.AlertDialog
 import android.app.Fragment
+import android.app.NotificationManager
 import android.app.admin.DevicePolicyManager.ACTION_PROVISION_MANAGED_DEVICE
 import android.app.admin.DevicePolicyManager.ACTION_PROVISION_MANAGED_PROFILE
 import android.appwidget.AppWidgetManager
 import android.content.BroadcastReceiver
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.DialogInterface
 import android.content.Intent
@@ -73,6 +76,7 @@ import com.oasisfeng.island.util.DevicePolicies.PreferredActivity
         super.onResume()
         val activity = activity; val pm = activity.packageManager
         activity.title = IslandNameManager.getName(activity)
+		setupRequiredPermissions(activity)
 
         val policies = DevicePolicies(activity.applicationContext)
         val isProfileOrDeviceOwner = policies.isProfileOrDeviceOwnerOnCallingUser
@@ -188,6 +192,44 @@ import com.oasisfeng.island.util.DevicePolicies.PreferredActivity
         setup<Preference>(R.string.key_manage_location) { remove(this) }
         setup<Preference>(R.string.key_manage_storage) { remove(this) }
     }
+
+	private fun setupRequiredPermissions(activity: Activity) {
+		val installerContext = ModuleContext(activity).forDeclaredPermission(REQUEST_INSTALL_PACKAGES)
+		setup<Preference>(R.string.key_install_unknown_apps) {
+			if (SDK_INT < O || installerContext == null) return@setup remove(this)
+			val granted = installerContext.packageManager.canRequestPackageInstalls()
+			summary = getString(if (granted) R.string.pref_permission_granted_summary else R.string.pref_permission_required_summary)
+			setOnPreferenceClickListener { openPermissionSettings(Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+				Uri.fromParts("package", installerContext.packageName, null)), "unknown-sources") }
+		}
+
+		setup<Preference>(R.string.key_notification_permission) {
+			if (SDK_INT < O) return@setup remove(this)
+			val granted = activity.getSystemService<NotificationManager>()?.areNotificationsEnabled() == true
+			summary = getString(if (granted) R.string.pref_permission_granted_summary else R.string.pref_permission_required_summary)
+			setOnPreferenceClickListener { openPermissionSettings(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+				.putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName), "notifications") }
+		}
+
+		setup<Preference>(R.string.key_start_other_apps_permission) {
+			if (! MiuiPermissions.isPermissionEditorAvailable(activity)) return@setup remove(this)
+			summary = getString(R.string.pref_permission_managed_by_hyperos_summary)
+			setOnPreferenceClickListener { openPermissionSettings(
+				MiuiPermissions.permissionEditorIntent(activity), "start-other-apps") }
+		}
+	}
+
+	private fun openPermissionSettings(intent: Intent, permission: String): Boolean {
+		return try {
+			Log.i(TAG, "Opening $permission settings in user ${Users.currentId()}")
+			startActivity(intent)
+			true
+		} catch (e: ActivityNotFoundException) {
+			Log.e(TAG, "System permission settings unavailable: $permission", e)
+			Toast.makeText(activity, R.string.toast_permission_settings_unavailable, Toast.LENGTH_LONG).show()
+			true
+		}
+	}
 
     private fun setupPreferenceForManagingAppOps(key: Int, permission: String, op: Int, @StringRes prompt: Int, precondition: Boolean = true) {
         setup<Preference>(key) {

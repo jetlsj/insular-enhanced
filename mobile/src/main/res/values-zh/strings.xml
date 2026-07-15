@@ -71,6 +71,7 @@
     <string name="menu_search">搜索</string>
     <string name="menu_filter">过滤</string>
     <string name="menu_settings">设置</string>
+    <string name="menu_install_apk_to_island">安装 APK 到壶中界</string>
 
     <string name="filter_include_hidden_system_components">+ 不可见的系统组件</string>
     <string name="filter_can_query_all_apps">可探知所在空间内的其它应用</string>
@@ -108,6 +109,16 @@
     <string name="toast_setup_in_progress">正在创建壶中界，请稍候…</string>
     <string name="toast_successfully_cloned">%1$s 已完成分身</string>
     <string name="toast_cannot_clone">抱歉，无法为 %1$s 分身。</string>
+    <string name="toast_clone_install_permission_required">请先允许当前空间“安装未知应用”，然后重新尝试克隆。</string>
+    <string name="toast_clone_action_launch_failed">无法打开安装流程，请检查“必要权限”后重试。</string>
+    <string name="toast_permission_settings_unavailable">此设备无法打开对应的系统权限设置。</string>
+    <string name="toast_apk_install_island_unavailable">壶中界当前不可用，请先唤醒壶中界后重试。</string>
+    <string name="toast_apk_install_launch_failed">无法打开 APK 安装流程，请检查“必要权限”后重试。</string>
+    <string name="toast_apk_install_wrong_profile">APK 安装必须在壶中界内执行。</string>
+    <string name="toast_apk_installer_unavailable">壶中界内的 APK 安装器不可用。</string>
+    <string name="toast_apk_install_permission_required">选择 APK 前，请先允许壶中界“安装未知应用”。</string>
+    <string name="toast_apk_install_permission_denied">“安装未知应用”仍未允许，已取消 APK 安装。</string>
+    <string name="toast_apk_picker_unavailable">无法打开系统文件选择器，请确认系统文件管理组件可用。</string>
     <string name="toast_already_cloned">分身已存在</string>
     <string name="toast_shortcut_failed">快捷方式创建失败</string>
     <string name="toast_greenify_failed">绿色化失败</string>
@@ -154,6 +165,13 @@
     <string name="action_copy">复制至剪贴板</string>
 
     <string name="pref_scoped_settings_header">分空间的独立设置</string>
+    <string name="pref_required_permissions_header">必要权限</string>
+    <string name="pref_install_unknown_apps_title">安装未知应用</string>
+    <string name="pref_notification_permission_title">通知权限</string>
+    <string name="pref_start_other_apps_permission_title">启动其他应用（HyperOS）</string>
+    <string name="pref_permission_managed_by_hyperos_summary">由 HyperOS 管理 · 点击前往设置</string>
+    <string name="pref_permission_granted_summary">已允许</string>
+    <string name="pref_permission_required_summary">未允许 · 点击前往设置</string>
     <string name="prompt_island_not_yet_setup">壶中界尚未创建</string>
     <string name="action_rename">更名</string>
     <string name="pref_privacy_header">隐私保护</string>

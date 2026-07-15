@@ -70,6 +70,7 @@
     <string name="menu_search">搜尋</string>
     <string name="menu_filter">過濾</string>
     <string name="menu_settings">設定</string>
+    <string name="menu_install_apk_to_island">安裝 APK 到壺中界</string>
 
     <string name="filter_include_hidden_system_components">+ 隱藏的系統元件</string>
 
@@ -103,6 +104,16 @@
     <string name="toast_setup_in_progress">正在建立壺中界，請稍後…</string>
     <string name="toast_successfully_cloned">%1$s 已完成分身</string>
     <string name="toast_cannot_clone">抱歉，無法為 %1$s 分身。</string>
+    <string name="toast_clone_install_permission_required">請先允許目前空間「安裝未知應用程式」，然後重新嘗試分身。</string>
+    <string name="toast_clone_action_launch_failed">無法開啟安裝流程，請檢查「必要權限」後重試。</string>
+    <string name="toast_permission_settings_unavailable">此裝置無法開啟對應的系統權限設定。</string>
+    <string name="toast_apk_install_island_unavailable">壺中界目前無法使用，請先喚醒壺中界後重試。</string>
+    <string name="toast_apk_install_launch_failed">無法開啟 APK 安裝流程，請檢查「必要權限」後重試。</string>
+    <string name="toast_apk_install_wrong_profile">APK 安裝必須在壺中界內執行。</string>
+    <string name="toast_apk_installer_unavailable">壺中界內的 APK 安裝器無法使用。</string>
+    <string name="toast_apk_install_permission_required">選擇 APK 前，請先允許壺中界「安裝未知應用程式」。</string>
+    <string name="toast_apk_install_permission_denied">「安裝未知應用程式」仍未允許，已取消 APK 安裝。</string>
+    <string name="toast_apk_picker_unavailable">無法開啟系統檔案選擇器，請確認系統檔案管理元件可用。</string>
     <string name="toast_already_cloned">分身已存在</string>
     <string name="toast_shortcut_failed">快速啟動方式建立失敗</string>
     <string name="toast_greenify_failed">綠色化失敗</string>
@@ -147,6 +158,13 @@
     <string name="action_copy">複製至剪貼簿</string>
 
     <string name="pref_scoped_settings_header">分空間的獨立設定</string>
+    <string name="pref_required_permissions_header">必要權限</string>
+    <string name="pref_install_unknown_apps_title">安裝未知應用程式</string>
+    <string name="pref_notification_permission_title">通知權限</string>
+    <string name="pref_start_other_apps_permission_title">啟動其他應用程式（HyperOS）</string>
+    <string name="pref_permission_managed_by_hyperos_summary">由 HyperOS 管理 · 點擊前往設定</string>
+    <string name="pref_permission_granted_summary">已允許</string>
+    <string name="pref_permission_required_summary">未允許 · 點擊前往設定</string>
     <string name="prompt_island_not_yet_setup">壺中界尚未建立</string>
     <string name="action_rename">重新命名</string>
     <string name="pref_privacy_header">隱私保護</string>

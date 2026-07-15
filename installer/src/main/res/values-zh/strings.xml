@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_installer_label">应用安装器</string>
+    <string name="toast_install_permission_required">克隆前请先允许当前空间“安装未知应用”。</string>
 
     <string name="confirm_installing">“%1$s”请求安装 %2$s。\n\n是否继续？</string>
     <string name="confirm_updating">“%1$s”请求更新 %2$s。\n\n是否继续？</string>

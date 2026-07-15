@@ -73,6 +73,7 @@ the sandbox environment. Island never collect data related to your privacy, plea
     <string name="menu_search">Search</string>
     <string name="menu_filter">Filter</string>
     <string name="menu_settings">Settings</string>
+    <string name="menu_install_apk_to_island">Install APK to Island</string>
 
     <string name="filter_include_hidden_system_components">+ Hidden System Components</string>
     <string name="filter_can_query_all_apps">Can see other inland apps</string>
@@ -111,6 +112,16 @@ the sandbox environment. Island never collect data related to your privacy, plea
     <string name="toast_setup_in_progress">Island setup in progress, please wait…</string>
     <string name="toast_successfully_cloned">%1$s is successfully cloned.</string>
     <string name="toast_cannot_clone">Sorry, unable to clone %1$s.</string>
+    <string name="toast_clone_install_permission_required">Allow “Install unknown apps” for this profile, then try cloning again.</string>
+    <string name="toast_clone_action_launch_failed">Unable to open the installation flow. Check Necessary permissions and try again.</string>
+    <string name="toast_permission_settings_unavailable">System permission settings are unavailable on this device.</string>
+    <string name="toast_apk_install_island_unavailable">Island is unavailable. Wake it and try again.</string>
+    <string name="toast_apk_install_launch_failed">Unable to open the APK installation flow. Check Necessary permissions and try again.</string>
+    <string name="toast_apk_install_wrong_profile">APK installation must run inside Island.</string>
+    <string name="toast_apk_installer_unavailable">The APK installer is unavailable in Island.</string>
+    <string name="toast_apk_install_permission_required">Allow “Install unknown apps” in Island before selecting an APK.</string>
+    <string name="toast_apk_install_permission_denied">“Install unknown apps” is still not allowed. APK installation was canceled.</string>
+    <string name="toast_apk_picker_unavailable">No system file picker is available for selecting an APK.</string>
     <string name="toast_already_cloned">Already cloned</string>
     <string name="toast_shortcut_failed">Failed to create the shortcut</string>
     <string name="toast_greenify_failed">Failed to greenify</string>
@@ -157,6 +168,13 @@ the sandbox environment. Island never collect data related to your privacy, plea
     <string name="action_copy">Copy to clipboard</string>
 
     <string name="pref_scoped_settings_header">Scoped Settings</string>
+    <string name="pref_required_permissions_header">Necessary permissions</string>
+    <string name="pref_install_unknown_apps_title">Install unknown apps</string>
+    <string name="pref_notification_permission_title">Notifications</string>
+    <string name="pref_start_other_apps_permission_title">Start other apps (HyperOS)</string>
+    <string name="pref_permission_managed_by_hyperos_summary">Managed by HyperOS · Tap to configure</string>
+    <string name="pref_permission_granted_summary">Allowed</string>
+    <string name="pref_permission_required_summary">Not allowed · Tap to configure</string>
     <string name="prompt_island_not_yet_setup">Island is not yet setup.</string>
     <string name="action_rename">Rename</string>
     <string name="pref_privacy_header">Privacy Protection</string>

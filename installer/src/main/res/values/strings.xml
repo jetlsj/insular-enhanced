@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_installer_label">App Installer</string>
+    <string name="toast_install_permission_required">Allow “Install unknown apps” for this profile before cloning.</string>
 
     <string name="confirm_installing">\"%1$s\" requests installing %2$s.\n\nAre you sure you want to continue?</string>
     <string name="confirm_updating">\"%1$s\" requests updating %2$s.\n\nAre you sure you want to continue?</string>

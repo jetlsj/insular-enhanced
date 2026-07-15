@@ -7,18 +7,22 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
 import android.net.Uri
+import android.os.SystemClock
 import android.os.UserHandle
+import android.util.Log
 import android.widget.Toast
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.lifecycleScope
 import com.oasisfeng.android.app.Activities
 import com.oasisfeng.android.content.IntentCompat
 import com.oasisfeng.android.ui.Dialogs
-import com.oasisfeng.android.util.Apps
 import com.oasisfeng.android.widget.Toasts
 import com.oasisfeng.island.analytics.Analytics.Param.ITEM_CATEGORY
 import com.oasisfeng.island.analytics.Analytics.Param.ITEM_ID
 import com.oasisfeng.island.analytics.analytics
 import com.oasisfeng.island.data.IslandAppInfo
+import com.oasisfeng.island.data.IslandAppListProvider
 import com.oasisfeng.island.data.helper.AppStateTrackingHelper
 import com.oasisfeng.island.engine.ClonedHiddenSystemApps
 import com.oasisfeng.island.engine.IslandManager
@@ -29,6 +33,10 @@ import com.oasisfeng.island.util.DevicePolicies
 import com.oasisfeng.island.util.OwnerUser
 import com.oasisfeng.island.util.ProfileUser
 import com.oasisfeng.island.util.Users
+import com.oasisfeng.island.util.CrossProfileActivityLauncher
+import com.oasisfeng.island.util.Users.Companion.toId
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.jetbrains.annotations.NotNull
 
 object IslandAppControl {
@@ -55,8 +63,7 @@ object IslandAppControl {
 		analytics().event("action_launch").with(ITEM_ID, app.packageName).send()
 
 		if (app.isHidden) unfreezeAndLaunch(context, app)
-		else if (! IslandManager.launchApp(context, app.packageName, app.user))      // Not frozen, launch the app directly. TODO: If isBlocked() ?
-			Toast.makeText(context, context.getString(R.string.toast_app_launch_failure, app.label), Toast.LENGTH_SHORT).show()
+		else launchDirectOrFallback(context, app)      // Not frozen, launch the app directly. TODO: If isBlocked() ?
 	}
 
 	private fun unfreezeAndLaunch(context: Context, app: IslandAppInfo) {
@@ -68,9 +75,51 @@ object IslandAppControl {
 			Toast.makeText(context, R.string.toast_app_launch_error, Toast.LENGTH_LONG).show()
 			return analytics().event("app_launch_error").with(ITEM_ID, pkg).with(ITEM_CATEGORY, failure).send() }
 
-		if (! IslandManager.launchApp(context, pkg, app.user)) {
-			Toast.makeText(context, context.getString(R.string.toast_app_launch_failure, Apps.of(context).getAppName(pkg)), Toast.LENGTH_LONG).show()
-			analytics().event("app_launch_error").with(ITEM_ID, pkg).with(ITEM_CATEGORY, "launcher_activity_not_found").send() }
+		launchDirectOrFallback(context, app)
+	}
+
+	private fun launchDirectOrFallback(context: Context, app: IslandAppInfo) {
+		val pkg = app.packageName
+		val trace = "launch:$pkg:u${app.user.toId()}:${SystemClock.elapsedRealtime()}"
+		val wasStopped = IslandManager.isAppStopped(context, pkg, app.user)
+		Log.i(TAG, "[$trace] Launch requested; stopped=$wasStopped")
+		val directLaunchDispatched = IslandManager.launchApp(context, pkg, app.user)
+		if (directLaunchDispatched && wasStopped != true) return
+
+		val activity = Activities.findActivityFrom(context) as? FragmentActivity
+		if (activity == null) return showLaunchFailure(context, app, trace, "foreground_activity_missing")
+		activity.lifecycleScope.launch {
+			if (directLaunchDispatched) {
+				delay(DIRECT_LAUNCH_VERIFICATION_DELAY)
+				when (IslandManager.isAppStopped(context, pkg, app.user)) {
+					false -> {
+						Log.i(TAG, "[$trace] First launch verified through LauncherApps")
+						IslandAppInfo.invalidateLaunchableAppsCache()
+						IslandAppListProvider.getInstance(context).refreshLaunchState(pkg, app.user)
+						return@launch
+					}
+					null -> return@launch showLaunchFailure(context, app, trace, "stopped_state_unavailable")
+					true -> Log.w(TAG, "[$trace] LauncherApps launch was dropped; preparing target-profile fallback")
+				}
+			} else Log.w(TAG, "[$trace] Direct launch unavailable; preparing target-profile fallback")
+
+			val action = Shuttle(context, to = app.user).invokeNoThrows(with = pkg) {
+				IslandManager.prepareAppLaunch(this, it, trace) }
+			if (action == null)
+				return@launch showLaunchFailure(context, app, trace, "profile_launch_intent_missing")
+			if (! CrossProfileActivityLauncher.send(activity, action, trace))
+				return@launch showLaunchFailure(context, app, trace, "pending_intent_dispatch_failed")
+
+			Log.i(TAG, "[$trace] Profile-side app launch dispatched")
+			IslandAppInfo.invalidateLaunchableAppsCache()
+			IslandAppListProvider.getInstance(context).refreshLaunchState(pkg, app.user)
+		}
+	}
+
+	private fun showLaunchFailure(context: Context, app: IslandAppInfo, trace: String, reason: String) {
+		Log.e(TAG, "[$trace] Failed to launch ${app.packageName}: $reason")
+		Toast.makeText(context, context.getString(R.string.toast_app_launch_failure, app.label), Toast.LENGTH_LONG).show()
+		analytics().event("app_launch_error").with(ITEM_ID, app.packageName).with(ITEM_CATEGORY, reason).send()
 	}
 
 	@JvmStatic fun launchSystemAppSettings(app: IslandAppInfo) {    // Stock app info activity requires the target app not hidden.
@@ -137,3 +186,6 @@ object IslandAppControl {
 		if (this == null) Toasts.showLong(context, R.string.prompt_island_not_ready)
 	}
 }
+
+private const val DIRECT_LAUNCH_VERIFICATION_DELAY = 600L
+private const val TAG = "Island.AppControl"

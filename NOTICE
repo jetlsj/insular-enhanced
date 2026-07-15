@@ -1,0 +1,20 @@
+Insular Enhanced
+
+This distribution is based on Insular:
+https://gitlab.com/secure-system/Insular
+
+Insular is itself based on Island:
+https://github.com/oasisfeng/island
+
+Insular also credits Shelter as an inspiration:
+https://github.com/PeterCxy/Shelter
+
+This distribution contains community modifications for permission guidance,
+clone and installer reliability, cross-profile app launching, diagnostic logs,
+and direct installation of standalone APK files into the managed profile.
+
+Insular Enhanced is an unofficial community fork and is not endorsed by or
+affiliated with the upstream projects, F-Droid, Google, Xiaomi, or other device
+manufacturers.
+
+The software is distributed under the Apache License, Version 2.0. See LICENSE.

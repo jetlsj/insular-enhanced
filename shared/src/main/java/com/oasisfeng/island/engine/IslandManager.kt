@@ -1,6 +1,9 @@
 package com.oasisfeng.island.engine
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ApplicationInfo.FLAG_STOPPED
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager
 import android.os.Build.VERSION.SDK_INT
@@ -62,9 +65,34 @@ object IslandManager {
             Log.i(TAG, "Launching $pkg in profile ${profile.toId()}...")
             launcherApps.startMainActivity(activities[0].componentName, profile, null, null)
             return true }
-        catch (e: SecurityException) {    // SecurityException: Cannot retrieve activities for unrelated profile 10
+        catch (e: PackageManager.NameNotFoundException) {
+            Log.e(TAG, "App not found while launching: $pkg @ user $profile", e)
+            return false }
+        catch (e: RuntimeException) {    // SecurityException: Cannot retrieve activities for unrelated profile 10
             Log.e(TAG, "Error launching app: $pkg @ user $profile", e)
             return false }
+    }
+
+    /**
+     * A newly installed package remains stopped until its first successful launch.  This flag is
+     * also useful for detecting vendor firmware that silently drops LauncherApps.startMainActivity().
+     */
+    @JvmStatic @OwnerUser fun isAppStopped(context: Context, pkg: String, profile: UserHandle): Boolean? {
+        return try {
+            context.getSystemService<LauncherApps>()!!.getApplicationInfo(pkg, 0, profile)
+                .flags and FLAG_STOPPED != 0
+        } catch (e: RuntimeException) {
+            Log.e(TAG, "Unable to read stopped state: $pkg @ user ${profile.toId()}", e)
+            null
+        }
+    }
+
+    /** Prepare the MIUI-compatible launch path in the target profile. Must be sent by the visible caller. */
+    @JvmStatic @ProfileUser fun prepareAppLaunch(context: Context, pkg: String, trace: String): PendingIntent? {
+        val intent = context.packageManager.getLaunchIntentForPackage(pkg)
+            ?: return null.also { Log.e(TAG, "[$trace] No profile-side launch intent for $pkg in user ${Users.currentId()}") }
+        intent.addFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+        return CrossProfileActivityLauncher.prepare(context, intent, pkg.hashCode() xor REQUEST_APP_LAUNCH, trace)
     }
 
     @JvmStatic fun getProfileIdsIncludingDisabled(context: Context): IntArray =
@@ -74,4 +102,5 @@ object IslandManager {
     fun isReady(context: Context, profile: UserHandle) = context.getSystemService<UserManager>()!!.isUserRunning(profile)
 }
 
+private const val REQUEST_APP_LAUNCH = 0x4C41
 private const val TAG = "Island.Manager"

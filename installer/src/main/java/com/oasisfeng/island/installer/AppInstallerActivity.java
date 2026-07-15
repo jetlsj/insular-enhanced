@@ -116,6 +116,8 @@ public class AppInstallerActivity extends CallerAwareActivity {
 		final Intent intent = getIntent();
 		final Uri data = intent.getData();
 		if (data == null) return false;
+		final String trace = intent.getStringExtra(InstallerExtras.EXTRA_OPERATION_TRACE);
+		Log.i(TAG, "[" + trace + "] Installer opened in user " + Users.currentId() + " for " + data);
 		final String caller = getCallingPackage();
 		if (caller == null) {
 			Log.w(TAG, "Caller is unknown, fallback to default package installer.");
@@ -144,9 +146,19 @@ public class AppInstallerActivity extends CallerAwareActivity {
 		} catch (final RuntimeException e) {
 			Analytics.$().logAndReport(TAG, "Error granting permission REQUEST_INSTALL_PACKAGES", e);
 		}
+		if (SDK_INT >= O && SCHEME_PACKAGE.equals(data.getScheme()) && ! context.getPackageManager().canRequestPackageInstalls()) {
+			Log.e(TAG, "[" + trace + "] Clone rejected: REQUEST_INSTALL_PACKAGES is not granted in user " + Users.currentId());
+			Toast.makeText(this, R.string.toast_install_permission_required, LENGTH_LONG).show();
+			final Intent settings = new Intent(ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+					Uri.fromParts(SCHEME_PACKAGE, context.getPackageName(), null));
+			if (settings.resolveActivity(getPackageManager()) != null) startActivity(settings);
+			finish();
+			return true;
+		}
 
 		@SuppressLint("InlinedApi") final AppInstallInfo install = this.mInstallInfo
 				= new AppInstallInfo(getApplicationContext(), caller, callerInfo != null ? callerInfo.uid : INVALID_UID);
+		install.setTrace(trace);
 		if (SCHEME_PACKAGE.equals(data.getScheme())) {
 			final String cloningAppId = data.getSchemeSpecificPart();
 			install.setMode(CLONE);
@@ -157,7 +169,9 @@ public class AppInstallerActivity extends CallerAwareActivity {
 			if (input != null) ApkAnalyzer.analyzeAsync(this, input, info -> {
 				if (info != null) {
 					final String appId = info.packageName;
-					if (info.splitNames != null) {
+					// A standalone base APK may expose an empty splitNames array (not null) on newer Android.
+					// Only a real split APK should use the inherit-existing installation path.
+					if (info.splitNames != null && info.splitNames.length > 0) {
 						mInstallInfo.setMode(INHERIT);
 						mInstallInfo.setDetails(info.splitNames[0]);
 						mSessionId.thenAccept(id -> AppInstallationNotifier.cancel(this, id));  // Cancel the notification of previous session
@@ -245,6 +259,7 @@ public class AppInstallerActivity extends CallerAwareActivity {
 
 	/** @param base_pkg the base package name for split APK installation, or null for full installation. */
 	private void performInstall(final Uri uri, final @Nullable String base_pkg) {
+		Log.i(TAG, "[" + mInstallInfo.getTrace() + "] Preparing package installer session for " + uri);
 		final boolean is_scheme_package = SCHEME_PACKAGE.equals(uri.getScheme());
 		if (is_scheme_package && base_pkg != null) throw new IllegalArgumentException("Scheme \"package\" could never be installed as split");
 		final Map<String, InputStream> input_streams = new LinkedHashMap<>();
@@ -305,6 +320,7 @@ public class AppInstallerActivity extends CallerAwareActivity {
 		final PendingIntent callback = AppInstallerStatusReceiver.createCallback(this, mInstallInfo, session_id);
 		try {
 			mSession.commit(callback.getIntentSender());
+			Log.i(TAG, "[" + mInstallInfo.getTrace() + "] Committed package installer session " + session_id);
 		} catch (final RuntimeException e) {    // e.g. "SecurityException: Can't install packages while in secure FRP"
 			Toasts.showLong(this, e.toString());
 			return;

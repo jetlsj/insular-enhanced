@@ -39,6 +39,7 @@ internal object AppInstallerUtils {
                                      var versionName: String? = null,
                                      var targetSdkVersion: Int? = null,
                                      var requestedLegacyExternalStorage: Boolean = false,
+                                     var trace: String? = null,
                                      var details: CharSequence? = null): Parcelable {
 	constructor(context: Context, caller: String, callerUid: Int) : this(caller, callerUid) { this.context = context }
 

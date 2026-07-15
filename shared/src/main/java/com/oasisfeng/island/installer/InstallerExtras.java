@@ -8,4 +8,5 @@ package com.oasisfeng.island.installer;
 public class InstallerExtras {
 
 	public static final String EXTRA_APP_INFO = "appInfo";		// TODO: Migrate to ClipData-based splits API.
+	public static final String EXTRA_OPERATION_TRACE = "operationTrace";
 }

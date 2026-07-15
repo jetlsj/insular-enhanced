@@ -8,6 +8,8 @@ import android.content.IntentFilter
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
+import android.os.Handler
+import android.os.Looper
 import android.os.UserHandle
 import android.util.ArrayMap
 import android.util.Log
@@ -32,6 +34,16 @@ class IslandAppListProvider : AppListProvider<IslandAppInfo>() {
 
 	operator fun get(pkg: String, profile: UserHandle): IslandAppInfo? {
 		return if (profile.isParentProfile()) super.get(pkg) else loadAppsInProfileIfNotYet(profile)[pkg]
+	}
+
+	/** Re-query launcher state after the first start clears FLAG_STOPPED in the target profile. */
+	fun refreshLaunchState(pkg: String, profile: UserHandle) {
+		val handler = Handler(Looper.getMainLooper())
+		for (delay in LAUNCH_STATE_REFRESH_DELAYS) handler.postDelayed({
+			IslandAppInfo.invalidateLaunchableAppsCache()
+			Log.d(TAG, "Refresh launch state: $pkg @ user ${profile.toId()}, delay=${delay}ms")
+			refreshPackage(pkg, profile, false)
+		}, delay)
 	}
 
 	fun addPlaceholder(pkg: String, profile: UserHandle) {
@@ -168,7 +180,9 @@ class IslandAppListProvider : AppListProvider<IslandAppInfo>() {
 		}
 
 		override fun onPackageAdded(pkg: String, user: UserHandle) {
+			IslandAppInfo.invalidateLaunchableAppsCache()
 			refreshPackage(pkg, user, true)
+			refreshLaunchState(pkg, user)
 		}
 
 		override fun onPackageChanged(pkg: String, user: UserHandle) {
@@ -198,5 +212,7 @@ class IslandAppListProvider : AppListProvider<IslandAppInfo>() {
 		private fun exclude(pkg: String) = Predicate { app: IslandAppInfo -> pkg != app.packageName }
 	}
 }
+
+private val LAUNCH_STATE_REFRESH_DELAYS = longArrayOf(250L, 1_000L, 2_500L)
 
 private const val TAG = "Island.ALP"

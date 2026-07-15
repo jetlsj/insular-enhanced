@@ -11,6 +11,27 @@
         android:title="@string/pref_lock_capture_target_title"
         android:summary="@string/pref_lock_capture_target_summary" />
 
+    <PreferenceCategory
+        android:key="@string/key_required_permissions"
+        android:title="@string/pref_required_permissions_header">
+
+        <Preference
+            android:key="@string/key_install_unknown_apps"
+            android:title="@string/pref_install_unknown_apps_title"
+            android:persistent="false" />
+
+        <Preference
+            android:key="@string/key_notification_permission"
+            android:title="@string/pref_notification_permission_title"
+            android:persistent="false" />
+
+        <Preference
+            android:key="@string/key_start_other_apps_permission"
+            android:title="@string/pref_start_other_apps_permission_title"
+            android:persistent="false" />
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:key="@string/key_privacy" android:title="@string/pref_privacy_header">
 
         <com.oasisfeng.android.preference.WallOfTextPreference
