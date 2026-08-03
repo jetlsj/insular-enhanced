@@ -10,12 +10,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Remove Test menu items from XML only
+      - name: Hide Test menu items
         run: |
           find . -name "*.xml" -path "*/menu/*" | while read f; do
             if grep -q "menu_test" "$f"; then
-              sed -i '/menu_test/d' "$f"
-              echo "Removed menu_test from $f"
+              sed -i 's/\(menu_test[^>]*\)/\1 android:visible="false"/g' "$f"
+              echo "Hidden menu_test in $f"
             fi
           done
 
