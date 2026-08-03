@@ -52,8 +52,8 @@ jobs:
 
       - name: Setup Android SDK
         run: |
-          rm -rf /usr/local/lib/android/sdk
-          unset ANDROID_SDK_ROOT
+          rm -rf /usr/local/lib/android/sdk 2>/dev/null || true
+          unset ANDROID_SDK_ROOT 2>/dev/null || true
           export ANDROID_HOME=$HOME/android-sdk
           mkdir -p $ANDROID_HOME/cmdline-tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
