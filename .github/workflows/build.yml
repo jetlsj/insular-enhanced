@@ -10,21 +10,48 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Remove Test menu item
+      # ========== 1. 删除 Test 菜单项 ==========
+      - name: Remove Test menu and references
         run: |
-          # 查找并删除菜单 XML 中的 Test 项
-          find . -path "*/res/menu/*.xml" -exec grep -l "Test" {} \; | while read f; do
+          echo "=== Finding Test menu items ==="
+          find . -path "*/res/menu/*.xml" -exec grep -l "Test" {} \; 2>/dev/null | while read f; do
+            echo "Found Test in: $f"
             sed -i '/Test/d' "$f"
             echo "Removed Test from $f"
           done
-          # 查找并删除代码中引用 Test 菜单 ID 的分支
-          find . -path "*/src/main/java/*.java" -o -path "*/src/main/java/*.kt" | while read f; do
-            if grep -q "action_test\|R.id.*test\|test.*->" "$f" 2>/dev/null; then
-              sed -i '/action_test/d;/R\.id\..*test/d;/test.*->/d' "$f"
-              echo "Removed Test references from $f"
+          
+          echo "=== Finding Test references in code ==="
+          find . \( -name "*.java" -o -name "*.kt" \) -path "*/src/*" | while read f; do
+            if grep -q "action_test\|R\.id\..*[Tt]est\|[Tt]est.*->" "$f" 2>/dev/null; then
+              echo "Found Test reference in: $f"
             fi
           done
 
+      # ========== 2. 只保留中文语言资源 ==========
+      - name: Keep only Chinese resources
+        run: |
+          echo "=== Cleaning non-Chinese values-* directories ==="
+          find . -path "*/res/values-*" -type d | while read dir; do
+            case "$(basename "$dir")" in
+              values-zh|values-zh-rCN|values-zh-rHK|values-zh-rTW|values-night*|values-v*)
+                echo "KEEP: $dir"
+                ;;
+              *)
+                echo "REMOVE: $dir"
+                rm -rf "$dir"
+                ;;
+            esac
+          done
+
+      # ========== 3. 删除测试代码目录 ==========
+      - name: Remove test directories
+        run: |
+          find . -type d \( -name "test" -o -name "androidTest" \) -path "*/src/*" | while read d; do
+            echo "REMOVE: $d"
+            rm -rf "$d"
+          done
+
+      # ========== 4. 编译 ==========
       - uses: actions/setup-java@v4
         with:
           java-version: '17'
@@ -35,7 +62,8 @@ jobs:
 
       - run: ./gradlew :assembly:assembleCompleteFdroidDebug --console=plain
 
+      # ========== 5. 上传产物 ==========
       - uses: actions/upload-artifact@v4
         with:
-          name: insular-enhanced-debug
+          name: insular-enhanced-cn
           path: assembly/build/outputs/apk/completeFdroid/debug/*.apk
