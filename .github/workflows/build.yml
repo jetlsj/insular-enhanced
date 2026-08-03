@@ -10,40 +10,34 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Rename Test menu to Chinese
+      - name: Optimize resources and rename Test menu
         run: |
-          echo "=== Replacing Test in menu XML ==="
+          # 1. Test 菜单改名
           find . -name "*.xml" -path "*/menu/*" | while read f; do
             if grep -q "menu_test" "$f"; then
               sed -i 's/android:title="Test"/android:title="测试"/g' "$f"
-              echo "Replaced in $f"
+              echo "Renamed Test in $f"
             fi
           done
-          
-          echo "=== Replacing Test in strings.xml ==="
           find . -name "strings.xml" -path "*/values*" | while read f; do
             if grep -q 'name="test_menu"' "$f"; then
               sed -i 's/name="test_menu">Test</name="test_menu">测试</g' "$f"
-              echo "Replaced in $f"
+              echo "Renamed Test in $f"
             fi
           done
-
-      - name: Keep only Chinese resources
-        run: |
+          
+          # 2. 只保留中文资源
           find . -path "*/res/values-*" -type d | while read dir; do
             case "$(basename "$dir")" in
               values-zh|values-zh-rCN|values-zh-rHK|values-zh-rTW|values-night*|values-v*)
-                echo "KEEP: $dir" ;;
+                ;;
               *)
-                echo "REMOVE: $dir"
                 rm -rf "$dir" ;;
             esac
           done
-
-      - name: Remove test directories
-        run: |
+          
+          # 3. 删除测试代码
           find . -type d \( -name "test" -o -name "androidTest" \) -path "*/src/*" | while read d; do
-            echo "REMOVE: $d"
             rm -rf "$d"
           done
 
@@ -53,25 +47,35 @@ jobs:
           distribution: 'temurin'
           cache: gradle
 
+      - name: Cache Android SDK
+        uses: actions/cache@v4
+        with:
+          path: ~/android-sdk
+          key: android-sdk-${{ runner.os }}
+
       - name: Setup Android SDK
         run: |
-          export ANDROID_HOME=$HOME/android-sdk
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q commandlinetools-linux-11076708_latest.zip -d $ANDROID_HOME/cmdline-tools/
-          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
-          yes | sdkmanager --licenses >/dev/null 2>&1 || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          echo "sdk.dir=$ANDROID_HOME" > local.properties
-          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
-          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          if [ -d "$HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager" ]; then
+            echo "SDK cached, skipping download"
+          else
+            export ANDROID_HOME=$HOME/android-sdk
+            mkdir -p $ANDROID_HOME/cmdline-tools
+            wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+            unzip -q commandlinetools-linux-11076708_latest.zip -d $ANDROID_HOME/cmdline-tools/
+            mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+            export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+            yes | sdkmanager --licenses >/dev/null 2>&1 || true
+            sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+          fi
+          echo "sdk.dir=$HOME/android-sdk" > local.properties
+          echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+          echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+          echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
 
       - name: Build APK
-        run: ./gradlew :assembly:assembleCompleteFdroidDebug --console=plain
+        run: ./gradlew :assembly:assembleCompleteFdroidDebug --parallel --build-cache --console=plain
 
       - uses: actions/upload-artifact@v4
         with:
-          name: insular-enhanced-cn
+          name: insular-enhanced-cn-${{ github.run_number }}
           path: assembly/build/outputs/apk/completeFdroid/debug/*.apk
