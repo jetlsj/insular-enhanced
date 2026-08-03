@@ -13,9 +13,10 @@ jobs:
       - name: Hide Test menu items
         run: |
           find . -name "*.xml" -path "*/menu/*" | while read f; do
-            if grep -q "menu_test" "$f"; then
-              sed -i '/menu_test/s/ \?\/>/ android:visible="false" \/>/' "$f"
-              echo "Hidden menu_test in $f"
+            # 匹配包含 test 的 ID，在其属性后精准追加 android:visible="false"，不破坏 XML 结构
+            if grep -qE 'id/.*test' "$f"; then
+              sed -i -E 's/(android:id="@[+]id\/[^"]*test[^"]*")/\1 android:visible="false"/g' "$f"
+              echo "Hidden test menu in $f"
             fi
           done
 
