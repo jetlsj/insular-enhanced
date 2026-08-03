@@ -1,4 +1,4 @@
-name: Debug Find Test
+name: Build APK
 
 on: workflow_dispatch
 
@@ -10,21 +10,85 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Find all menu XML files
+      # ========== 1. 删除 Test 菜单项（修正路径和匹配规则）==========
+      - name: Remove Test menu items
         run: |
-          echo "=== All menu XML files ==="
-          find . -name "*.xml" -path "*/menu*" | head -20
+          echo "=== Removing menu_test from XML ==="
+          find . -name "*.xml" -path "*/menu/*" | while read f; do
+            if grep -q "menu_test" "$f"; then
+              echo "Found menu_test in: $f"
+              sed -i '/menu_test/d' "$f"
+              echo "Removed from $f"
+            fi
+          done
           
-          echo ""
-          echo "=== Files containing 'Test' (case insensitive) ==="
-          grep -rni "test" --include="*.xml" res/ 2>/dev/null | head -30 || true
-          grep -rni "test" --include="*.xml" assembly/src/ 2>/dev/null | head -30 || true
-          
-          echo ""
-          echo "=== Full content of menu files ==="
-          find . -name "*.xml" -path "*/menu*" -exec echo ">>> {}" \; -exec cat {} \;
+          echo "=== Verifying removal ==="
+          grep -rn "menu_test" --include="*.xml" . || echo "No menu_test found in XML"
 
-      - name: Find Test in Java/Kotlin
+      # ========== 2. 删除 Java/Kotlin 中对 menu_test 的引用 ==========
+      - name: Remove menu_test code references
         run: |
-          echo "=== Java/Kotlin files with 'test' ==="
-          grep -rni "test" --include="*.java" --include="*.kt" assembly/src/main/java/ 2>/dev/null | grep -i "menu\|R.id\|optionsItemSelected" | head -20 || true
+          echo "=== Finding menu_test in Java/Kotlin ==="
+          find . \( -name "*.java" -o -name "*.kt" \) -path "*/src/*" | while read f; do
+            if grep -q "menu_test\|R\.id\.menu_test" "$f" 2>/dev/null; then
+              echo "Found in: $f"
+              # 注释掉包含 menu_test 的行（保留文件结构，避免编译报错）
+              sed -i 's/^.*menu_test.*$/\/\/ &/' "$f"
+              echo "Commented out in $f"
+            fi
+          done
+
+      # ========== 3. 只保留中文语言资源 ==========
+      - name: Keep only Chinese resources
+        run: |
+          find . -path "*/res/values-*" -type d | while read dir; do
+            case "$(basename "$dir")" in
+              values-zh|values-zh-rCN|values-zh-rHK|values-zh-rTW|values-night*|values-v*)
+                echo "KEEP: $dir"
+                ;;
+              *)
+                echo "REMOVE: $dir"
+                rm -rf "$dir"
+                ;;
+            esac
+          done
+
+      # ========== 4. 删除测试代码目录 ==========
+      - name: Remove test directories
+        run: |
+          find . -type d \( -name "test" -o -name "androidTest" \) -path "*/src/*" | while read d; do
+            echo "REMOVE: $d"
+            rm -rf "$d"
+          done
+
+      # ========== 5. 设置 JDK 17 ==========
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # ========== 6. 手动安装 Android SDK ==========
+      - name: Setup Android SDK
+        run: |
+          export ANDROID_HOME=$HOME/android-sdk
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q commandlinetools-linux-11076708_latest.zip -d $ANDROID_HOME/cmdline-tools/
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      # ========== 7. 编译 ==========
+      - name: Build APK
+        run: ./gradlew :assembly:assembleCompleteFdroidDebug --console=plain
+
+      # ========== 8. 上传产物 ==========
+      - uses: actions/upload-artifact@v4
+        with:
+          name: insular-enhanced-cn
+          path: assembly/build/outputs/apk/completeFdroid/debug/*.apk
