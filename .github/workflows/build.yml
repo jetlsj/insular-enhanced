@@ -10,18 +10,12 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Remove Test menu items
+      - name: Remove Test menu items from XML only
         run: |
           find . -name "*.xml" -path "*/menu/*" | while read f; do
             if grep -q "menu_test" "$f"; then
               sed -i '/menu_test/d' "$f"
               echo "Removed menu_test from $f"
-            fi
-          done
-          find . \( -name "*.java" -o -name "*.kt" \) -path "*/src/*" | while read f; do
-            if grep -q "menu_test\|R\.id\.menu_test" "$f" 2>/dev/null; then
-              sed -i 's/^.*menu_test.*$/\/\/ &/' "$f"
-              echo "Commented menu_test in $f"
             fi
           done
 
@@ -60,10 +54,7 @@ jobs:
           export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0" "platform-tools"
-          
-          # 关键：强制 Gradle 使用我们的 SDK，忽略系统预装的
           echo "sdk.dir=$ANDROID_HOME" > local.properties
-          
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
