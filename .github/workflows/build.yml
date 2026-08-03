@@ -10,13 +10,21 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Hide Test menu items
+      - name: Rename Test menu to Chinese
         run: |
+          echo "=== Replacing Test in menu XML ==="
           find . -name "*.xml" -path "*/menu/*" | while read f; do
-            # 匹配包含 test 的 ID，在其属性后精准追加 android:visible="false"，不破坏 XML 结构
-            if grep -qE 'id/.*test' "$f"; then
-              sed -i -E 's/(android:id="@[+]id\/[^"]*test[^"]*")/\1 android:visible="false"/g' "$f"
-              echo "Hidden test menu in $f"
+            if grep -q "menu_test" "$f"; then
+              sed -i 's/android:title="Test"/android:title="测试"/g' "$f"
+              echo "Replaced in $f"
+            fi
+          done
+          
+          echo "=== Replacing Test in strings.xml ==="
+          find . -name "strings.xml" -path "*/values*" | while read f; do
+            if grep -q 'name="test_menu"' "$f"; then
+              sed -i 's/name="test_menu">Test</name="test_menu">测试</g' "$f"
+              echo "Replaced in $f"
             fi
           done
 
