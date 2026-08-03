@@ -14,7 +14,7 @@ jobs:
         run: |
           find . -name "*.xml" -path "*/menu/*" | while read f; do
             if grep -q "menu_test" "$f"; then
-              sed -i 's/\(menu_test[^>]*\)/\1 android:visible="false"/g' "$f"
+              sed -i '/menu_test/s/ \?\/>/ android:visible="false" \/>/' "$f"
               echo "Hidden menu_test in $f"
             fi
           done
